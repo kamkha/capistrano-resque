@@ -9,10 +9,12 @@ module CapistranoResque
         _cset(:workers, {"*" => 1})
         _cset(:resque_kill_signal, "QUIT")
         _cset(:interval, "5")
+        _cset(:resque_worker_role, :resque_worker)
+        _cset(:resque_scheduler_role, :resque_scheduler)
 
         def workers_roles
           return workers.keys if workers.first[1].is_a? Hash
-          [:resque_worker]
+          [resque_worker_role]
         end
 
         def for_each_workers(&block)
@@ -21,7 +23,7 @@ module CapistranoResque
               yield(role.to_sym, workers[role.to_sym])
             end
           else
-            yield(:resque_worker,workers)
+            yield(resque_worker_role, workers)
           end
         end
 
@@ -100,13 +102,13 @@ module CapistranoResque
 
           namespace :scheduler do
             desc "Starts resque scheduler with default configs"
-            task :start, :roles => :resque_scheduler do
+            task :start, :roles => [resque_scheduler_role] do
               pid = "#{current_path}/tmp/pids/scheduler.pid"
               run(start_scheduler(pid))
             end
 
             desc "Stops resque scheduler"
-            task :stop, :roles => :resque_scheduler do
+            task :stop, :roles => [resque_scheduler_role] do
               pid = "#{current_path}/tmp/pids/scheduler.pid"
               run(stop_scheduler(pid))
             end
